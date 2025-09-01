@@ -6,10 +6,16 @@
     "build": "vite build",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "dev:sandbox": "wrangler pages dev dist --d1=satyamgold-production --local --ip 0.0.0.0 --port 3000",
+    "db:init": "wrangler d1 migrations apply satyamgold-production --local",
+    "db:seed": "wrangler d1 execute satyamgold-production --local --file=./seed.sql",
+    "clean-port": "fuser -k 3000/tcp 2>/dev/null || true"
   },
   "dependencies": {
-    "hono": "^4.9.4"
+    "hono": "^4.9.4",
+    "nanoid": "^5.1.5",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
