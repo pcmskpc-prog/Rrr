@@ -8,6 +8,7 @@ import { hashPassword } from './utils/auth'
 import { websiteRoutes } from './routes/website'
 import { adminRoutes } from './routes/admin'
 import { apiRoutes } from './routes/api'
+import { adminApiRoutes } from './routes/admin-api'
 
 type Bindings = {
   DB: D1Database
@@ -28,7 +29,7 @@ app.use('*', async (c, next) => {
   const { DB } = c.env
   
   try {
-    // Check if tables exist, if not create them
+    // Create all tables if they don't exist
     await DB.prepare(`
       CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY,
@@ -106,7 +107,7 @@ app.use('*', async (c, next) => {
     // Insert default settings if not exist
     const defaultSettings = [
       ['site_name', 'SATYAM GOLD'],
-      ['site_logo', 'https://base44.app/api/apps/68a375197577ce82d3f4980e/files/04925dbc9_1000012467.png'],
+      ['site_logo', 'https://via.placeholder.com/100x100/ff8c42/ffffff?text=SG'],
       ['primary_color', '#ff8c42'],
       ['secondary_color', '#2c3e50'],
       ['footer_text', '© 2024 SATYAM GOLD. All rights reserved. Delivering freshness to your doorstep.'],
@@ -122,6 +123,97 @@ app.use('*', async (c, next) => {
         await DB.prepare(`INSERT INTO settings (key, value) VALUES (?, ?)`).bind(key, value).run()
       }
     }
+
+    // Insert sample products if none exist
+    const productCount = await DB.prepare('SELECT COUNT(*) as count FROM products').first()
+    if (productCount?.count === 0) {
+      const sampleProducts = [
+        {
+          id: nanoid(),
+          name: 'Premium Wheat Atta',
+          description: 'Stone-milled whole wheat flour made from the finest quality wheat grains',
+          category: 'Atta',
+          price: 40,
+          unit: 'kg',
+          weight_options: JSON.stringify(['1kg', '5kg', '10kg']),
+          image_url: 'https://via.placeholder.com/300x300/8B4513/FFFFFF?text=Wheat+Atta',
+          in_stock: 1,
+          featured: 1
+        },
+        {
+          id: nanoid(),
+          name: 'Sattu',
+          description: 'Premium quality roasted gram flour, rich in protein',
+          category: 'Sattu',
+          price: 60,
+          unit: 'kg',
+          weight_options: JSON.stringify(['500g', '1kg', '5kg']),
+          image_url: 'https://via.placeholder.com/300x300/D2691E/FFFFFF?text=Sattu',
+          in_stock: 1,
+          featured: 1
+        },
+        {
+          id: nanoid(),
+          name: 'Besan',
+          description: 'Fine quality gram flour perfect for all recipes',
+          category: 'Besan',
+          price: 80,
+          unit: 'kg',
+          weight_options: JSON.stringify(['500g', '1kg', '2kg']),
+          image_url: 'https://via.placeholder.com/300x300/FFD700/333333?text=Besan',
+          in_stock: 1,
+          featured: 1
+        },
+        {
+          id: nanoid(),
+          name: 'Multi-Grain Atta',
+          description: 'Healthy blend of multiple grains for enhanced nutrition',
+          category: 'Atta',
+          price: 65,
+          unit: 'kg',
+          weight_options: JSON.stringify(['1kg', '5kg']),
+          image_url: 'https://via.placeholder.com/300x300/8B7355/FFFFFF?text=MultiGrain',
+          in_stock: 1,
+          featured: 0
+        }
+      ]
+
+      for (const product of sampleProducts) {
+        await DB.prepare(`
+          INSERT INTO products (id, name, description, category, price, unit, weight_options, image_url, in_stock, featured)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          product.id,
+          product.name,
+          product.description,
+          product.category,
+          product.price,
+          product.unit,
+          product.weight_options,
+          product.image_url,
+          product.in_stock,
+          product.featured
+        ).run()
+      }
+    }
+
+    // Insert sample hero slide if none exist
+    const slideCount = await DB.prepare('SELECT COUNT(*) as count FROM hero_slides').first()
+    if (slideCount?.count === 0) {
+      await DB.prepare(`
+        INSERT INTO hero_slides (id, image_url, title, description, link, display_order, active)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        nanoid(),
+        'https://via.placeholder.com/1920x400/ff8c42/ffffff?text=Welcome+to+SATYAM+GOLD',
+        'Premium Quality Products',
+        'Delivering freshness to your doorstep',
+        '/',
+        1,
+        1
+      ).run()
+    }
+
   } catch (error) {
     console.error('Database initialization error:', error)
   }
@@ -133,5 +225,17 @@ app.use('*', async (c, next) => {
 app.route('/', websiteRoutes)
 app.route('/api', apiRoutes)
 app.route('/admin', adminRoutes)
+app.route('/admin/api', adminApiRoutes)
+
+// Default 404 handler
+app.notFound((c) => {
+  return c.text('404 - Page not found', 404)
+})
+
+// Error handler
+app.onError((err, c) => {
+  console.error(`${err}`)
+  return c.text('Internal Server Error', 500)
+})
 
 export default app

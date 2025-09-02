@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { adminLayout } from '../templates/admin-layout'
 import { verifyPassword, hashPassword, generateId } from '../utils/auth'
+import { adminSettingsScript } from './admin-settings'
 
 type Bindings = {
   DB: D1Database
@@ -502,7 +503,7 @@ adminRoutes.get('/settings', async (c) => {
             
             <div id="hero-slides-container" class="space-y-4">
               ${heroSlides.results.map((slide, index) => `
-                <div class="border rounded-lg p-4">
+                <div class="border rounded-lg p-4" data-slide-id="${slide.id}">
                   <div class="flex justify-between items-start mb-4">
                     <h3 class="font-medium">Hero Image ${index + 1}</h3>
                     <button type="button" onclick="deleteSlide('${slide.id}')" class="text-red-500">
@@ -510,6 +511,7 @@ adminRoutes.get('/settings', async (c) => {
                     </button>
                   </div>
                   <input type="url" name="slide_url_${slide.id}" value="${slide.image_url}" 
+                         placeholder="Image URL (Required)"
                          class="w-full px-4 py-2 border rounded-lg mb-2">
                   ${slide.image_url ? `
                     <img src="${slide.image_url}" alt="Slide" class="h-32 rounded mb-2">
@@ -517,7 +519,9 @@ adminRoutes.get('/settings', async (c) => {
                   <input type="text" name="slide_title_${slide.id}" value="${slide.title || ''}" 
                          placeholder="Title (optional)" class="w-full px-4 py-2 border rounded-lg mb-2">
                   <input type="text" name="slide_description_${slide.id}" value="${slide.description || ''}" 
-                         placeholder="Description (optional)" class="w-full px-4 py-2 border rounded-lg">
+                         placeholder="Description (optional)" class="w-full px-4 py-2 border rounded-lg mb-2">
+                  <input type="text" name="slide_link_${slide.id}" value="${slide.link || '/'}" 
+                         placeholder="Link URL (default: /)" class="w-full px-4 py-2 border rounded-lg">
                 </div>
               `).join('')}
             </div>
@@ -657,88 +661,7 @@ adminRoutes.get('/settings', async (c) => {
       </div>
     </div>
     
-    <script>
-      function addHeroSlide() {
-        const container = document.getElementById('hero-slides-container');
-        const slideId = 'new-' + Date.now();
-        const slideHtml = \`
-          <div class="border rounded-lg p-4">
-            <div class="flex justify-between items-start mb-4">
-              <h3 class="font-medium">New Hero Image</h3>
-            </div>
-            <input type="url" name="slide_url_\${slideId}" 
-                   placeholder="Image URL" 
-                   class="w-full px-4 py-2 border rounded-lg mb-2">
-            <input type="text" name="slide_title_\${slideId}" 
-                   placeholder="Title (optional)" 
-                   class="w-full px-4 py-2 border rounded-lg mb-2">
-            <input type="text" name="slide_description_\${slideId}" 
-                   placeholder="Description (optional)" 
-                   class="w-full px-4 py-2 border rounded-lg">
-          </div>
-        \`;
-        container.insertAdjacentHTML('beforeend', slideHtml);
-      }
-      
-      async function deleteSlide(slideId) {
-        if (!confirm('Are you sure you want to delete this slide?')) return;
-        
-        const response = await fetch('/admin/api/slides/' + slideId, {
-          method: 'DELETE'
-        });
-        
-        if (response.ok) {
-          location.reload();
-        }
-      }
-      
-      function changePassword() {
-        const newPassword = prompt('Enter new admin password:');
-        if (newPassword && newPassword.length >= 6) {
-          fetch('/admin/api/change-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: newPassword })
-          }).then(() => {
-            alert('Password changed successfully');
-          });
-        } else {
-          alert('Password must be at least 6 characters');
-        }
-      }
-      
-      document.getElementById('settings-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const settings = {};
-        
-        // Extract settings
-        for (const [key, value] of formData.entries()) {
-          if (!key.startsWith('slide_')) {
-            settings[key] = value;
-          }
-        }
-        
-        // Save settings
-        const response = await fetch('/admin/api/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(settings)
-        });
-        
-        if (response.ok) {
-          alert('Settings saved successfully');
-          location.reload();
-        }
-      });
-      
-      // Update color input displays
-      document.querySelectorAll('input[type="color"]').forEach(input => {
-        input.addEventListener('change', (e) => {
-          e.target.nextElementSibling.value = e.target.value;
-        });
-      });
-    </script>
+    ${adminSettingsScript}
   `
   
   return c.html(adminLayout('Settings', content))
