@@ -9,6 +9,63 @@ type Bindings = {
 
 export const adminApiRoutes = new Hono<{ Bindings: Bindings }>()
 
+// Save all settings including hero slides
+adminApiRoutes.post('/settings', async (c) => {
+  const { DB } = c.env
+  const body = await c.req.json()
+  
+  try {
+    // Save general settings
+    const settings = body.settings || {}
+    for (const [key, value] of Object.entries(settings)) {
+      // Convert any values to string for D1 storage
+      const stringValue = typeof value === 'string' ? value : String(value)
+      
+      if (stringValue !== null && stringValue !== undefined && stringValue !== '') {
+        // Check if setting exists
+        const existing = await DB.prepare('SELECT key FROM settings WHERE key = ?').bind(key).first()
+        
+        if (existing) {
+          await DB.prepare('UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?')
+            .bind(stringValue, key).run()
+        } else {
+          await DB.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').bind(key, stringValue).run()
+        }
+      }
+    }
+    
+    // Handle hero slides
+    if (body.slides && Array.isArray(body.slides)) {
+      // Delete all existing slides first
+      await DB.prepare('DELETE FROM hero_slides').run()
+      
+      // Insert new slides
+      let displayOrder = 1
+      for (const slide of body.slides) {
+        if (slide.image_url) {
+          await DB.prepare(`
+            INSERT INTO hero_slides (id, image_url, title, description, link, display_order, active)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `).bind(
+            generateId(),
+            slide.image_url || '',
+            slide.title || '',
+            slide.description || '',
+            slide.link || '',
+            displayOrder++,
+            1
+          ).run()
+        }
+      }
+    }
+    
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Settings save error:', error)
+    return c.json({ error: error.message }, 500)
+  }
+})
+
 // Create/Update product
 adminApiRoutes.post('/products', async (c) => {
   const { DB } = c.env
@@ -133,60 +190,6 @@ adminApiRoutes.put('/orders/:id', async (c) => {
     
     return c.json({ success: true })
   } catch (error) {
-    return c.json({ error: error.message }, 500)
-  }
-})
-
-// Save all settings including hero slides
-adminApiRoutes.post('/settings', async (c) => {
-  const { DB } = c.env
-  const body = await c.req.json()
-  
-  try {
-    // Save general settings
-    const settings = body.settings || {}
-    for (const [key, value] of Object.entries(settings)) {
-      if (value !== null && value !== undefined) {
-        // Check if setting exists
-        const existing = await DB.prepare('SELECT key FROM settings WHERE key = ?').bind(key).first()
-        
-        if (existing) {
-          await DB.prepare('UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?')
-            .bind(value, key).run()
-        } else {
-          await DB.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').bind(key, value).run()
-        }
-      }
-    }
-    
-    // Handle hero slides
-    if (body.slides) {
-      // Delete all existing slides first
-      await DB.prepare('DELETE FROM hero_slides').run()
-      
-      // Insert new slides
-      let displayOrder = 1
-      for (const slide of body.slides) {
-        if (slide.image_url) {
-          await DB.prepare(`
-            INSERT INTO hero_slides (id, image_url, title, description, link, display_order, active)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-          `).bind(
-            generateId(),
-            slide.image_url,
-            slide.title || '',
-            slide.description || '',
-            slide.link || '/',
-            displayOrder++,
-            1
-          ).run()
-        }
-      }
-    }
-    
-    return c.json({ success: true })
-  } catch (error) {
-    console.error('Settings save error:', error)
     return c.json({ error: error.message }, 500)
   }
 })

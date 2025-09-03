@@ -23,8 +23,8 @@ websiteRoutes.get('/', async (c) => {
   // Get hero slides
   const heroSlides = await DB.prepare('SELECT * FROM hero_slides WHERE active = 1 ORDER BY display_order').all()
   
-  // Get featured products
-  const featuredProducts = await DB.prepare('SELECT * FROM products WHERE featured = 1 AND in_stock = 1 LIMIT 6').all()
+  // Get all products (not just featured)
+  const allProducts = await DB.prepare('SELECT * FROM products WHERE in_stock = 1').all()
   
   const content = `
     <!-- Hero Slider -->
@@ -37,7 +37,7 @@ websiteRoutes.get('/', async (c) => {
                 <div class="text-white max-w-lg">
                   ${slide.title ? `<h2 class="text-4xl md:text-5xl font-bold mb-4">${slide.title}</h2>` : ''}
                   ${slide.description ? `<p class="text-lg mb-6">${slide.description}</p>` : ''}
-                  ${slide.link ? `<a href="${slide.link}" class="btn-primary px-6 py-3 rounded-lg inline-block">Shop Now</a>` : ''}
+                  ${slide.link && slide.link !== '/' && slide.link !== '' ? `<a href="${slide.link}" class="btn-primary px-6 py-3 rounded-lg inline-block">${slide.link.startsWith('http') ? 'Learn More' : 'Shop Now'}</a>` : ''}
                 </div>
               </div>
             </div>
@@ -83,14 +83,14 @@ websiteRoutes.get('/', async (c) => {
       </div>
     </section>
 
-    <!-- Featured Products -->
+    <!-- All Products -->
     <section class="py-12">
       <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold text-center mb-8">Shop From Our Premium Range</h2>
         <p class="text-center text-gray-600 mb-12">Discover our carefully curated selection of traditional Indian products</p>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          ${featuredProducts.results.map(product => `
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          ${allProducts.results.map(product => `
             <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
               ${product.in_stock ? '<span class="absolute top-4 left-4 bg-green-500 text-white px-3 py-1 rounded text-sm">In Stock</span>' : ''}
               <img src="${product.image_url || 'https://via.placeholder.com/300x300'}" alt="${product.name}" class="w-full h-64 object-cover">
@@ -115,12 +115,6 @@ websiteRoutes.get('/', async (c) => {
               </div>
             </div>
           `).join('')}
-        </div>
-        
-        <div class="text-center mt-12">
-          <a href="/products" class="btn-primary px-8 py-3 rounded-lg inline-block">
-            View All Products <i class="fas fa-arrow-right ml-2"></i>
-          </a>
         </div>
       </div>
     </section>
