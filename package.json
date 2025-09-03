@@ -2,10 +2,11 @@
   "name": "webapp",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "wrangler pages dev",
-    "deploy": "npm run build && wrangler pages deploy",
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview",
+  "deploy": "npm run build && wrangler pages deploy dist"
+  }
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "dev:sandbox": "wrangler pages dev dist --d1=satyamgold-production --local --ip 0.0.0.0 --port 3000",
     "db:init": "wrangler d1 migrations apply satyamgold-production --local",
