@@ -5,29 +5,4 @@
   "pages_build_output_dir": "./dist",
   "compatibility_flags": ["nodejs_compat"],
   
-  // D1 Database Configuration
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "satyamgold-production",
-      "database_id": "local-database-id"
-    }
-  ],
   
-  // KV Storage for sessions and cart data
-  "kv_namespaces": [
-    {
-      "binding": "KV",
-      "id": "local-kv-id",
-      "preview_id": "local-kv-preview-id"
-    }
-  ],
-  
-  // R2 Storage for image uploads
-  "r2_buckets": [
-    {
-      "binding": "R2",
-      "bucket_name": "satyamgold-images"
-    }
-  ]
-}
