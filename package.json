@@ -2,11 +2,10 @@
   "name": "webapp",
   "type": "module",
   "scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview",
-  "deploy": "npm run build && wrangler pages deploy dist"
-  }
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && wrangler pages deploy dist",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "dev:sandbox": "wrangler pages dev dist --d1=satyamgold-production --local --ip 0.0.0.0 --port 3000",
     "db:init": "wrangler d1 migrations apply satyamgold-production --local",
@@ -19,10 +18,11 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-  "@vitejs/plugin-react": "^4.0.3",
-  "react": "^18.2.0",
-  "react-dom": "^18.2.0",
-  "vite": "^5.1.5",
-  "wrangler": "^4.4.0"
+    "@hono/vite-cloudflare-pages": "^0.4.2",
+    "@vitejs/plugin-react": "^4.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite": "^5.1.5",
+    "wrangler": "^4.4.0"
   }
-  
+}

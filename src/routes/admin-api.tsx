@@ -18,8 +18,8 @@ adminApiRoutes.post('/settings', async (c) => {
     // Save general settings
     const settings = body.settings || {}
     for (const [key, value] of Object.entries(settings)) {
-      // Convert any values to string for D1 storage
-      const stringValue = typeof value === 'string' ? value : String(value)
+      // Properly serialize objects to JSON strings before saving.
+      const stringValue = typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value);
       
       if (stringValue !== null && stringValue !== undefined && stringValue !== '') {
         // Check if setting exists
