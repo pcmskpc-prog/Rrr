@@ -6,7 +6,12 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    ssr: 'src/index.tsx'
+    ssr: 'src/index.tsx',
+    rollupOptions: {
+      output: {
+        entryFileNames: '_worker.js'
+      }
+    }
   },
   server: {
     port: 3000
