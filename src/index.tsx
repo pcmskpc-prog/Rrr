@@ -234,7 +234,7 @@ app.notFound((c) => {
 
 // Error handler
 app.onError((err, c) => {
-  console.error(`${err}`)
+  console.error(`[Hono Error] Path: ${c.req.path}`, err)
   return c.text('Internal Server Error', 500)
 })
 

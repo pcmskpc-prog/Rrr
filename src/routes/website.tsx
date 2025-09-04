@@ -11,7 +11,8 @@ export const websiteRoutes = new Hono<{ Bindings: Bindings }>()
 
 // Homepage
 websiteRoutes.get('/', async (c) => {
-  const { DB } = c.env
+  try {
+    const { DB } = c.env
   
   // Get settings
   const settings = {}
@@ -167,6 +168,10 @@ websiteRoutes.get('/', async (c) => {
   `
 
   return c.html(mainLayout(settings, content, scripts))
+  } catch (err) {
+    console.error('[Homepage Route Error]', err);
+    throw err; // Re-throw to be caught by global error handler
+  }
 })
 
 // Products page
